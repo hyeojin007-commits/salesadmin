@@ -103,13 +103,20 @@ export default function ProductsPage() {
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">단가</label>
-            <input
-              type="number"
-              value={form.unitPrice}
-              onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })}
-              className="w-full border rounded px-3 py-2 text-sm text-gray-900"
-              required
-            />
+            <div className="relative">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={form.unitPrice ? `₩${form.unitPrice.toLocaleString()}` : ""}
+                placeholder="₩0"
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9]/g, "");
+                  setForm({ ...form, unitPrice: raw ? Number(raw) : 0 });
+                }}
+                className="w-full border rounded px-3 py-2 text-sm text-gray-900"
+                required
+              />
+            </div>
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">단위</label>

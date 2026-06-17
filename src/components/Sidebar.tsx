@@ -18,9 +18,8 @@ export default function Sidebar() {
 
   const links = [
     { href: "/dashboard", label: "대시보드", roles: ["ADMIN", "SALES", "DISTRIBUTOR", "DEALER"] },
-    { href: "/dashboard/orders", label: "발주 관리", roles: ["ADMIN", "SALES", "DISTRIBUTOR", "DEALER"] },
+    { href: "/dashboard/quotes", label: "견적서", roles: ["ADMIN", "SALES", "DISTRIBUTOR", "DEALER"] },
     { href: "/dashboard/products", label: "제품 관리", roles: ["ADMIN", "SALES"] },
-    { href: "/dashboard/quotes", label: "견적서 조회", roles: ["ADMIN", "SALES", "DISTRIBUTOR", "DEALER"] },
     { href: "/dashboard/users", label: "사용자 관리", roles: ["ADMIN"] },
   ];
 

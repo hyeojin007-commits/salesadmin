@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+export async function GET() {
+  return seed();
+}
+
 export async function POST() {
+  return seed();
+}
+
+async function seed() {
   const password = await bcrypt.hash("admin1234", 12);
 
   await prisma.user.upsert({

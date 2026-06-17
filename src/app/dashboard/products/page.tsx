@@ -9,12 +9,16 @@ interface Product {
   unitPrice: number;
   unit: string;
   category?: string;
+  updatedAt: string;
 }
+
+const emptyForm = { id: "", name: "", description: "", unitPrice: 0, unit: "EA", category: "" };
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", description: "", unitPrice: 0, unit: "EA", category: "" });
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState(emptyForm);
 
   const fetchProducts = () => fetch("/api/products").then((r) => r.json()).then(setProducts);
 
@@ -22,14 +26,48 @@ export default function ProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    setForm({ name: "", description: "", unitPrice: 0, unit: "EA", category: "" });
+    if (editing) {
+      await fetch("/api/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+    } else {
+      await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+    }
+    setForm(emptyForm);
     setShowForm(false);
+    setEditing(false);
     fetchProducts();
+  };
+
+  const handleEdit = (p: Product) => {
+    setForm({
+      id: p.id,
+      name: p.name,
+      description: p.description || "",
+      unitPrice: p.unitPrice,
+      unit: p.unit,
+      category: p.category || "",
+    });
+    setEditing(true);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`"${name}" 제품을 삭제하시겠습니까?`)) return;
+    await fetch(`/api/products?id=${id}`, { method: "DELETE" });
+    fetchProducts();
+  };
+
+  const handleCancel = () => {
+    setForm(emptyForm);
+    setShowForm(false);
+    setEditing(false);
   };
 
   return (
@@ -37,7 +75,7 @@ export default function ProductsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">제품 관리</h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => showForm ? handleCancel() : setShowForm(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
         >
           {showForm ? "닫기" : "제품 등록"}
@@ -89,10 +127,15 @@ export default function ProductsPage() {
               className="w-full border rounded px-3 py-2 text-sm text-gray-900"
             />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-2 flex gap-2">
             <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 text-sm">
-              등록
+              {editing ? "수정 완료" : "등록"}
             </button>
+            {editing && (
+              <button type="button" onClick={handleCancel} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-md text-sm">
+                취소
+              </button>
+            )}
           </div>
         </form>
       )}
@@ -106,6 +149,8 @@ export default function ProductsPage() {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">단가</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">단위</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">설명</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">최근 수정</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">관리</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -116,8 +161,38 @@ export default function ProductsPage() {
                 <td className="px-4 py-3 text-sm text-gray-900">₩{p.unitPrice.toLocaleString()}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{p.unit}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{p.description || "-"}</td>
+                <td className="px-4 py-3 text-sm text-gray-500">
+                  {new Date(p.updatedAt).toLocaleString("ko-KR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+                <td className="px-4 py-3 text-sm space-x-2">
+                  <button
+                    onClick={() => handleEdit(p)}
+                    className="text-blue-600 hover:underline text-xs"
+                  >
+                    수정
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p.id, p.name)}
+                    className="text-red-600 hover:underline text-xs"
+                  >
+                    삭제
+                  </button>
+                </td>
               </tr>
             ))}
+            {products.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                  등록된 제품이 없습니다.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

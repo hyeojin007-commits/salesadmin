@@ -32,3 +32,40 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(product, { status: 201 });
 }
+
+export async function PATCH(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || !["ADMIN", "SALES"].includes(session.user.role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json();
+  const product = await prisma.product.update({
+    where: { id: body.id },
+    data: {
+      name: body.name,
+      description: body.description,
+      unitPrice: body.unitPrice,
+      unit: body.unit,
+      category: body.category,
+    },
+  });
+  return NextResponse.json(product);
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || !["ADMIN", "SALES"].includes(session.user.role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  await prisma.product.update({
+    where: { id },
+    data: { isActive: false },
+  });
+  return NextResponse.json({ message: "Deleted" });
+}

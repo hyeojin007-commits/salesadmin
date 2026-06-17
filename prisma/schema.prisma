@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  SALES
+  DISTRIBUTOR
+  DEALER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  QUOTED
+  COMPLETED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  role          Role      @default(DEALER)
+  company       String?
+  phone         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  orders        Order[]   @relation("OrderRequester")
+  processedOrders Order[] @relation("OrderProcessor")
+  quotes        Quote[]
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  unitPrice     Float
+  unit          String    @default("EA")
+  category      String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  orderItems    OrderItem[]
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING)
+  requesterId   String
+  requester     User        @relation("OrderRequester", fields: [requesterId], references: [id])
+  processedById String?
+  processedBy   User?       @relation("OrderProcessor", fields: [processedById], references: [id])
+  note          String?
+  totalAmount   Float       @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items         OrderItem[]
+  quote         Quote?
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product @relation(fields: [productId], references: [id])
+  quantity      Int
+  unitPrice     Float
+  amount        Float
+}
+
+model Quote {
+  id            String   @id @default(cuid())
+  quoteNumber   String   @unique
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id])
+  issuedById    String
+  issuedBy      User     @relation(fields: [issuedById], references: [id])
+  totalAmount   Float
+  tax           Float    @default(0)
+  grandTotal    Float
+  validUntil    DateTime
+  note          String?
+  createdAt     DateTime @default(now())
+}

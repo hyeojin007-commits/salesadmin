@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 interface Product {
   id: string;
@@ -50,6 +51,8 @@ function formatQuoteDate(dateStr: string) {
 }
 
 export default function QuotesPage() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selected, setSelected] = useState<Quote | null>(null);
@@ -62,6 +65,13 @@ export default function QuotesPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchQuotes = () => fetch("/api/quotes").then((r) => r.json()).then(setQuotes);
+
+  const handleDeleteQuote = async (id: string, quoteNumber: string) => {
+    if (!confirm(`견적서 "${quoteNumber}"을(를) 삭제하시겠습니까?`)) return;
+    const res = await fetch(`/api/quotes?id=${id}`, { method: "DELETE" });
+    if (res.ok) { setSelected(null); fetchQuotes(); }
+    else { const data = await res.json(); alert(data.error || "삭제 실패"); }
+  };
 
   useEffect(() => {
     fetchQuotes();
@@ -190,9 +200,11 @@ export default function QuotesPage() {
                 )}
               </div>
               {/* 우측: 공급자 정보 박스 */}
-              <div style={{ width: "260px", borderLeft: "1px solid #ccc", padding: "8px", fontSize: "9pt", lineHeight: 1.8, whiteSpace: "pre-line", color: "#000" }}>
+              <div style={{ width: "260px", borderLeft: "1px solid #ccc", padding: "8px", fontSize: "9pt", lineHeight: 1.8, whiteSpace: "pre-line", color: "#000", position: "relative" }}>
                 <p style={{ fontFamily: "'돋움체', 'DotumChe', monospace", fontSize: "14pt", fontWeight: "bold", marginBottom: "2px" }}>한화비전주식회사</p>
                 <span>{`경기도 성남시 분당구 판교로319-6\n대표이사  김 기 철\n\n담  당 : ${selected.issuedBy.name}`}</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/stamp.svg" alt="직인" style={{ position: "absolute", top: "10px", right: "10px", width: "90px", height: "90px" }} />
               </div>
             </div>
 
@@ -293,10 +305,15 @@ export default function QuotesPage() {
             </div>
 
             {/* 버튼 */}
-            <div className="print:hidden" style={{ marginTop: "16px" }}>
+            <div className="print:hidden" style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
               <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
                 인쇄 / PDF 저장
               </button>
+              {isAdmin && (
+                <button onClick={() => handleDeleteQuote(selected.id, selected.quoteNumber)} className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700">
+                  견적서 삭제
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -324,8 +341,9 @@ export default function QuotesPage() {
                   <td className="px-4 py-3 text-sm text-gray-900 font-medium">₩{q.totalAmount.toLocaleString()}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{q.issuedBy.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-500">{new Date(q.createdAt).toLocaleString("ko-KR")}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 space-x-2">
                     <button onClick={() => setSelected(q)} className="text-blue-600 hover:underline text-sm">상세보기</button>
+                    {isAdmin && <button onClick={() => handleDeleteQuote(q.id, q.quoteNumber)} className="text-red-600 hover:underline text-sm">삭제</button>}
                   </td>
                 </tr>
               ))}

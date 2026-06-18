@@ -19,10 +19,42 @@ export default function ProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const fetchProducts = () => fetch("/api/products").then((r) => r.json()).then(setProducts);
 
   useEffect(() => { fetchProducts(); }, []);
+
+  const filtered = products.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    (p.category || "").toLowerCase().includes(search.toLowerCase()) ||
+    (p.description || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/products/bulk", { method: "POST", body: formData });
+    const data = await res.json();
+    alert(data.message || data.error);
+    setUploading(false);
+    e.target.value = "";
+    fetchProducts();
+  };
+
+  const downloadTemplate = () => {
+    const header = "제품명\t단가\t단위\t카테고리\t설명\n";
+    const sample = "예시제품\t100000\tEA\tCCTV\t제품 설명\n";
+    const blob = new Blob(["﻿" + header + sample], { type: "text/tab-separated-values;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "제품_일괄등록_양식.xls"; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,14 +104,32 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-900">제품 관리</h1>
-        <button
-          onClick={() => showForm ? handleCancel() : setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
-        >
-          {showForm ? "닫기" : "제품 등록"}
-        </button>
+        <div className="flex gap-2 items-center">
+          <button onClick={downloadTemplate} className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 text-sm">
+            양식 다운로드
+          </button>
+          <label className={`bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm cursor-pointer ${uploading ? "opacity-50" : ""}`}>
+            {uploading ? "업로드 중..." : "일괄 업로드"}
+            <input type="file" accept=".xlsx,.xls,.csv" onChange={handleBulkUpload} className="hidden" disabled={uploading} />
+          </label>
+          <button
+            onClick={() => showForm ? handleCancel() : setShowForm(true)}
+            className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm"
+          >
+            {showForm ? "닫기" : "제품 등록"}
+          </button>
+        </div>
+      </div>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="제품명, 카테고리, 설명으로 검색..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full border rounded-lg px-4 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       {showForm && (
@@ -161,7 +211,7 @@ export default function ProductsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {products.map((p) => (
+            {filtered.map((p) => (
               <tr key={p.id}>
                 <td className="px-4 py-3 text-sm text-gray-900 font-medium">{p.name}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{p.category || "-"}</td>
@@ -193,10 +243,10 @@ export default function ProductsPage() {
                 </td>
               </tr>
             ))}
-            {products.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                  등록된 제품이 없습니다.
+                  {search ? "검색 결과가 없습니다." : "등록된 제품이 없습니다."}
                 </td>
               </tr>
             )}

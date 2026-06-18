@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <g opacity="0.85">
+    <circle cx="60" cy="60" r="56" fill="none" stroke="#CC0000" stroke-width="5"/>
+    <circle cx="60" cy="60" r="49" fill="none" stroke="#CC0000" stroke-width="1.5"/>
+    <text x="60" y="42" text-anchor="middle" font-family="'돋움', serif" font-size="18" font-weight="bold" fill="#CC0000">한화비전</text>
+    <text x="60" y="64" text-anchor="middle" font-family="'돋움', serif" font-size="18" font-weight="bold" fill="#CC0000">주식회사</text>
+    <text x="60" y="86" text-anchor="middle" font-family="'돋움', serif" font-size="16" font-weight="bold" fill="#CC0000">之印</text>
+  </g>
+</svg>

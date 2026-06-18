@@ -89,3 +89,23 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(quote, { status: 201 });
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  const quote = await prisma.quote.findUnique({ where: { id } });
+  if (!quote) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await prisma.orderItem.deleteMany({ where: { orderId: quote.orderId } });
+  await prisma.quote.delete({ where: { id } });
+  await prisma.order.delete({ where: { id: quote.orderId } });
+
+  return NextResponse.json({ message: "Deleted" });
+}

@@ -21,8 +21,30 @@ export default function ProductsPage() {
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const fetchProducts = () => fetch("/api/products").then((r) => r.json()).then(setProducts);
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === filtered.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filtered.map((p) => p.id)));
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`선택한 ${selectedIds.size}개 제품을 삭제하시겠습니까?`)) return;
+    for (const id of selectedIds) {
+      await fetch(`/api/products?id=${id}`, { method: "DELETE" });
+    }
+    setSelectedIds(new Set());
+    fetchProducts();
+  };
 
   useEffect(() => { fetchProducts(); }, []);
 
@@ -47,8 +69,8 @@ export default function ProductsPage() {
   };
 
   const downloadTemplate = () => {
-    const header = "제품명\t단가\t단위\t카테고리\t설명\n";
-    const sample = "예시제품\t100000\tEA\tCCTV\t제품 설명\n";
+    const header = "제품명\t카테고리\t단가\t단위\t설명\n";
+    const sample = "예시제품\tCCTV\t100000\tEA\t제품 설명\n";
     const blob = new Blob(["﻿" + header + sample], { type: "text/tab-separated-values;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -107,6 +129,11 @@ export default function ProductsPage() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-900">제품 관리</h1>
         <div className="flex gap-2 items-center">
+          {selectedIds.size > 0 && (
+            <button onClick={handleBulkDelete} className="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 text-sm">
+              선택 삭제 ({selectedIds.size})
+            </button>
+          )}
           <button onClick={downloadTemplate} className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 text-sm">
             양식 다운로드
           </button>
@@ -201,6 +228,9 @@ export default function ProductsPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-4 py-3 text-center">
+                <input type="checkbox" checked={filtered.length > 0 && selectedIds.size === filtered.length} onChange={toggleAll} className="rounded" />
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">제품명</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">카테고리</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">단가</th>
@@ -212,7 +242,10 @@ export default function ProductsPage() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {filtered.map((p) => (
-              <tr key={p.id}>
+              <tr key={p.id} className={selectedIds.has(p.id) ? "bg-blue-50" : ""}>
+                <td className="px-4 py-3 text-center">
+                  <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} className="rounded" />
+                </td>
                 <td className="px-4 py-3 text-sm text-gray-900 font-medium">{p.name}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{p.category || "-"}</td>
                 <td className="px-4 py-3 text-sm text-gray-900">₩{p.unitPrice.toLocaleString()}</td>
@@ -245,7 +278,7 @@ export default function ProductsPage() {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                   {search ? "검색 결과가 없습니다." : "등록된 제품이 없습니다."}
                 </td>
               </tr>

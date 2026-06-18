@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 interface Product {
   id: string;
   name: string;
+  description?: string;
   unitPrice: number;
   unit: string;
 }
@@ -27,7 +28,7 @@ interface Quote {
       quantity: number;
       unitPrice: number;
       amount: number;
-      product: { name: string };
+      product: { name: string; description?: string };
     }>;
   };
 }
@@ -37,15 +38,15 @@ interface OrderItem {
   quantity: number;
 }
 
-function formatIssueDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}년 ${String(d.getMonth() + 1).padStart(2, "0")}월`;
+function parseField(note: string | undefined, field: string): string {
+  if (!note) return "";
+  const match = note.match(new RegExp(`${field}: (.+?)(\n|$)`));
+  return match ? match[1] : "";
 }
 
-function parseRecipient(note?: string) {
-  if (!note) return "-";
-  const match = note.match(/수신처: (.+?)(\n|$)/);
-  return match ? match[1] : "-";
+function formatQuoteDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, "0")}. ${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export default function QuotesPage() {
@@ -55,6 +56,7 @@ export default function QuotesPage() {
   const [showForm, setShowForm] = useState(false);
 
   const [recipient, setRecipient] = useState("");
+  const [projectName, setProjectName] = useState("");
   const [items, setItems] = useState<OrderItem[]>([{ productId: "", quantity: 1 }]);
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -92,10 +94,16 @@ export default function QuotesPage() {
     await fetch("/api/quotes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ recipient: recipient.trim(), items: validItems, note }),
+      body: JSON.stringify({
+        recipient: recipient.trim(),
+        projectName: projectName.trim(),
+        items: validItems,
+        note,
+      }),
     });
 
     setRecipient("");
+    setProjectName("");
     setItems([{ productId: "", quantity: 1 }]);
     setNote("");
     setShowForm(false);
@@ -124,16 +132,28 @@ export default function QuotesPage() {
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">견적서 작성</h2>
 
-          <div className="mb-4">
-            <label className="block text-xs text-gray-500 mb-1">수신처</label>
-            <input
-              type="text"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-              placeholder="수신처를 입력하세요"
-              className="w-full border rounded px-3 py-2 text-sm text-gray-900"
-              required
-            />
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">수신처</label>
+              <input
+                type="text"
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+                placeholder="예: 에스원"
+                className="w-full border rounded px-3 py-2 text-sm text-gray-900"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">건명</label>
+              <input
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                placeholder="예: CCTV 견적"
+                className="w-full border rounded px-3 py-2 text-sm text-gray-900"
+              />
+            </div>
           </div>
 
           <label className="block text-xs text-gray-500 mb-1">품목</label>
@@ -191,10 +211,8 @@ export default function QuotesPage() {
           </div>
 
           <div className="bg-gray-50 rounded p-3 mb-4 text-sm text-gray-600 space-y-1">
-            <p>공급가: ₩{totalAmount.toLocaleString()}</p>
-            <p>부가세 (10%): ₩{(totalAmount * 0.1).toLocaleString()}</p>
-            <p className="font-bold text-gray-900 text-base">합계: ₩{(totalAmount * 1.1).toLocaleString()}</p>
-            <p className="text-xs text-gray-400">* 기한: 발행일로부터 7일 / 발행일: 자동 설정</p>
+            <p className="font-bold text-gray-900 text-base">합계: ₩{totalAmount.toLocaleString()}</p>
+            <p className="text-xs text-gray-400">* VAT 별도 / 기한: 견적일로부터 7일</p>
           </div>
 
           <button
@@ -207,68 +225,118 @@ export default function QuotesPage() {
         </form>
       )}
 
-      {/* 견적서 상세 보기 */}
+      {/* 견적서 상세 (엑셀 양식) */}
       {selected ? (
         <div>
           <button
             onClick={() => setSelected(null)}
-            className="text-blue-600 hover:underline text-sm mb-4"
+            className="text-blue-600 hover:underline text-sm mb-4 print:hidden"
           >
             ← 목록으로
           </button>
 
-          <div className="bg-white rounded-lg shadow p-8 max-w-3xl print:shadow-none">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">견 적 서</h2>
-              <p className="text-sm text-gray-500 mt-1">{selected.quoteNumber}</p>
+          <div className="bg-white rounded-lg shadow p-10 max-w-4xl mx-auto print:shadow-none print:p-0" style={{ fontFamily: "'Malgun Gothic', '맑은 고딕', '굴림', sans-serif" }}>
+            {/* 제목 */}
+            <h2 className="text-center text-4xl font-bold tracking-[0.3em] mb-2" style={{ fontFamily: "'돋움', sans-serif" }}>
+              견 적 서
+            </h2>
+
+            {/* 견적번호 + 견적일 */}
+            <div className="flex justify-between text-sm mb-4">
+              <span>견적 번호 : {selected.quoteNumber}</span>
+              <span>견적일 : {formatQuoteDate(selected.createdAt)}</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-              <div>
-                <p className="text-gray-500">수신처</p>
-                <p className="font-medium text-gray-900">{parseRecipient(selected.order.note)}</p>
+            {/* 수신처 + 공급자 */}
+            <div className="flex justify-between mb-1">
+              <div className="flex-1">
+                <p className="text-lg font-bold mb-1">
+                  {parseField(selected.order.note, "수신처")} 貴中
+                </p>
+                {parseField(selected.order.note, "건명") && (
+                  <p className="text-sm">건&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;명 : {parseField(selected.order.note, "건명")}</p>
+                )}
               </div>
-              <div className="text-right">
-                <p className="text-gray-500">발행일</p>
-                <p className="text-gray-900">{formatIssueDate(selected.createdAt)}</p>
-                <p className="text-gray-500 mt-2">기한</p>
-                <p className="text-gray-900">{new Date(selected.validUntil).toLocaleDateString("ko-KR")}</p>
+              <div className="border border-gray-400 p-3 text-xs leading-6 w-64">
+                <p className="font-bold text-sm mb-1">한화비전주식회사</p>
+                <p>경기도 성남시 분당구 판교로319-6</p>
+                <p>대표이사 김 기 철</p>
+                <p className="mt-1">담&nbsp;&nbsp;당 : {selected.issuedBy.name}</p>
               </div>
             </div>
 
-            <table className="w-full mb-6 text-sm">
+            {/* 단위 */}
+            <div className="text-right text-xs text-gray-600 mb-0">[단위 : 원]</div>
+
+            {/* 품목 테이블 */}
+            <table className="w-full border-collapse text-sm mb-0">
               <thead>
-                <tr className="border-y-2 border-gray-900">
-                  <th className="py-2 text-left">품목</th>
-                  <th className="py-2 text-right">단가</th>
-                  <th className="py-2 text-right">수량</th>
-                  <th className="py-2 text-right">금액</th>
+                <tr className="border-t-2 border-b border-gray-900 bg-gray-50">
+                  <th className="border border-gray-300 px-2 py-2 text-center w-10">번호</th>
+                  <th className="border border-gray-300 px-2 py-2 text-center">규 격</th>
+                  <th className="border border-gray-300 px-2 py-2 text-center">품 명</th>
+                  <th className="border border-gray-300 px-2 py-2 text-center w-14">단위</th>
+                  <th className="border border-gray-300 px-2 py-2 text-center w-14">수량</th>
+                  <th className="border border-gray-300 px-2 py-2 text-center w-24">단 가</th>
+                  <th className="border border-gray-300 px-2 py-2 text-center w-28">금 액</th>
+                  <th className="border border-gray-300 px-2 py-2 text-center w-16">비고</th>
                 </tr>
               </thead>
               <tbody>
                 {selected.order.items.map((item, idx) => (
-                  <tr key={idx} className="border-b">
-                    <td className="py-2 text-gray-900">{item.product.name}</td>
-                    <td className="py-2 text-right text-gray-900">₩{item.unitPrice.toLocaleString()}</td>
-                    <td className="py-2 text-right text-gray-900">{item.quantity}</td>
-                    <td className="py-2 text-right text-gray-900">₩{item.amount.toLocaleString()}</td>
+                  <tr key={idx}>
+                    <td className="border border-gray-300 px-2 py-1.5 text-center">{idx + 1}</td>
+                    <td className="border border-gray-300 px-2 py-1.5 text-left text-xs">{item.product.description || ""}</td>
+                    <td className="border border-gray-300 px-2 py-1.5 text-left">{item.product.name}</td>
+                    <td className="border border-gray-300 px-2 py-1.5 text-center">EA</td>
+                    <td className="border border-gray-300 px-2 py-1.5 text-right">{item.quantity}</td>
+                    <td className="border border-gray-300 px-2 py-1.5 text-right">{item.unitPrice.toLocaleString()}</td>
+                    <td className="border border-gray-300 px-2 py-1.5 text-right">{item.amount.toLocaleString()}</td>
+                    <td className="border border-gray-300 px-2 py-1.5 text-center"></td>
                   </tr>
                 ))}
+                {/* 이하여백 */}
+                {selected.order.items.length < 13 && (
+                  <tr>
+                    <td className="border border-gray-300 px-2 py-1.5" colSpan={8}>
+                      <p className="text-center text-xs text-gray-400">- 이 하 여 백 -</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-gray-900 font-bold">
+                  <td className="border border-gray-300 px-2 py-2 text-center" colSpan={2}>합&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;계</td>
+                  <td className="border border-gray-300 px-2 py-2"></td>
+                  <td className="border border-gray-300 px-2 py-2"></td>
+                  <td className="border border-gray-300 px-2 py-2 text-right">
+                    {selected.order.items.reduce((s, i) => s + i.quantity, 0)}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-2"></td>
+                  <td className="border border-gray-300 px-2 py-2 text-right">
+                    {selected.totalAmount.toLocaleString()}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-2"></td>
+                </tr>
+              </tfoot>
             </table>
 
-            <div className="border-t-2 border-gray-900 pt-4 text-sm space-y-1 text-right">
-              <p className="text-gray-700">공급가: ₩{selected.totalAmount.toLocaleString()}</p>
-              <p className="text-gray-700">부가세 (10%): ₩{selected.tax.toLocaleString()}</p>
-              <p className="text-lg font-bold text-gray-900">합계: ₩{selected.grandTotal.toLocaleString()}</p>
+            {/* 하단 조건 */}
+            <div className="mt-4 text-sm space-y-0.5">
+              <p>1. 납&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;기 : 발주(계약)후 6주</p>
+              <p>2. 유효기간 : 견적일로부터 7일</p>
+              <p>3. 납품조건 : 협의</p>
+              {selected.note && <p>4. 비&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;고 : {selected.note}</p>}
             </div>
 
-            <div className="mt-6 text-sm text-gray-500 space-y-1">
-              <p>작성자: {selected.issuedBy.name}</p>
-              <p>생성일시: {new Date(selected.createdAt).toLocaleString("ko-KR")}</p>
-              {selected.note && <p>비고: {selected.note}</p>}
+            <p className="mt-4 text-sm font-medium">※ 상기 견적은 VAT 별도 견적입니다.</p>
+
+            {/* 메타 정보 */}
+            <div className="mt-4 pt-3 border-t text-xs text-gray-400 space-y-0.5 print:hidden">
+              <p>작성자: {selected.issuedBy.name} | 생성일시: {new Date(selected.createdAt).toLocaleString("ko-KR")}</p>
             </div>
 
+            {/* 인쇄 버튼 */}
             <div className="mt-6 flex gap-2 print:hidden">
               <button
                 onClick={handlePrint}
@@ -287,9 +355,8 @@ export default function QuotesPage() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">견적번호</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">수신처</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">건명</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">합계</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">발행일</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">기한</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">작성자</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">생성일시</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
@@ -299,12 +366,9 @@ export default function QuotesPage() {
               {quotes.map((q) => (
                 <tr key={q.id}>
                   <td className="px-4 py-3 text-sm text-gray-900 font-mono">{q.quoteNumber}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{parseRecipient(q.order.note)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900 font-medium">₩{q.grandTotal.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{formatIssueDate(q.createdAt)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {new Date(q.validUntil).toLocaleDateString("ko-KR")}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900">{parseField(q.order.note, "수신처")}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{parseField(q.order.note, "건명") || "-"}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900 font-medium">₩{q.totalAmount.toLocaleString()}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{q.issuedBy.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-500">
                     {new Date(q.createdAt).toLocaleString("ko-KR")}
@@ -321,7 +385,7 @@ export default function QuotesPage() {
               ))}
               {quotes.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     견적서가 없습니다. "새 견적서 작성" 버튼으로 생성해보세요.
                   </td>
                 </tr>

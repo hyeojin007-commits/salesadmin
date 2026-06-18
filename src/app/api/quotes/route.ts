@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { recipient, items, note } = body as {
+  const { recipient, projectName, items, note } = body as {
     recipient: string;
+    projectName?: string;
     items: { productId: string; quantity: number }[];
     note?: string;
   };
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
       orderNumber: generateOrderNumber(),
       requesterId: session.user.id,
       status: "QUOTED",
-      note: `수신처: ${recipient}${note ? `\n비고: ${note}` : ""}`,
+      note: `수신처: ${recipient}${projectName ? `\n건명: ${projectName}` : ""}${note ? `\n비고: ${note}` : ""}`,
       totalAmount,
       items: { create: orderItems },
     },

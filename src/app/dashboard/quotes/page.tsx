@@ -160,7 +160,7 @@ export default function QuotesPage() {
         <div>
           <button onClick={() => setSelected(null)} className="text-blue-600 hover:underline text-sm mb-4 print:hidden">← 목록으로</button>
 
-          <div className="bg-white shadow mx-auto print:shadow-none print:p-0" style={{ width: "210mm", padding: "15mm 20mm", fontFamily: "'굴림', 'Gulim', sans-serif", fontSize: "10pt", lineHeight: 1.4 }}>
+          <div className="bg-white shadow mx-auto print:shadow-none print:p-0" style={{ width: "210mm", padding: "15mm 20mm", fontFamily: "'굴림', 'Gulim', sans-serif", fontSize: "10pt", lineHeight: 1.4, color: "#000" }}>
 
             {/* Row 1: 제목 */}
             <div style={{ borderTop: "1px solid #000", borderLeft: "1px solid #000", borderRight: "1px solid #000", padding: "10px 0", textAlign: "center" }}>
@@ -170,7 +170,7 @@ export default function QuotesPage() {
             </div>
 
             {/* Row 2: 견적번호 + 견적일 */}
-            <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", borderLeft: "1px solid #000", borderRight: "1px solid #000", padding: "4px 8px", fontSize: "10pt" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", borderLeft: "1px solid #000", borderRight: "1px solid #000", padding: "4px 8px", fontSize: "10pt", color: "#000" }}>
               <span>견적 번호 : {selected.quoteNumber}</span>
               <span>견적일 : {formatQuoteDate(selected.createdAt)}</span>
             </div>
@@ -190,7 +190,7 @@ export default function QuotesPage() {
                 )}
               </div>
               {/* 우측: 공급자 정보 박스 */}
-              <div style={{ width: "260px", borderLeft: "1px solid #ccc", padding: "8px", fontSize: "9pt", lineHeight: 1.8, whiteSpace: "pre-line" }}>
+              <div style={{ width: "260px", borderLeft: "1px solid #ccc", padding: "8px", fontSize: "9pt", lineHeight: 1.8, whiteSpace: "pre-line", color: "#000" }}>
                 <p style={{ fontFamily: "'돋움체', 'DotumChe', monospace", fontSize: "14pt", fontWeight: "bold", marginBottom: "2px" }}>한화비전주식회사</p>
                 <span>{`경기도 성남시 분당구 판교로319-6\n대표이사  김 기 철\n\n담  당 : ${selected.issuedBy.name}`}</span>
               </div>

@@ -1,9 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
-  <g opacity="0.85">
-    <circle cx="60" cy="60" r="56" fill="none" stroke="#CC0000" stroke-width="5"/>
-    <circle cx="60" cy="60" r="49" fill="none" stroke="#CC0000" stroke-width="1.5"/>
-    <text x="60" y="42" text-anchor="middle" font-family="'돋움', serif" font-size="18" font-weight="bold" fill="#CC0000">한화비전</text>
-    <text x="60" y="64" text-anchor="middle" font-family="'돋움', serif" font-size="18" font-weight="bold" fill="#CC0000">주식회사</text>
-    <text x="60" y="86" text-anchor="middle" font-family="'돋움', serif" font-size="16" font-weight="bold" fill="#CC0000">之印</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <g opacity="0.9">
+    <!-- 외곽 원 (두꺼운) -->
+    <circle cx="100" cy="100" r="94" fill="none" stroke="#C41E1E" stroke-width="6"/>
+    <!-- 내곽 원 (얇은) -->
+    <circle cx="100" cy="100" r="85" fill="none" stroke="#C41E1E" stroke-width="2"/>
+
+    <!-- 전서체 스타일 한자 배치 (한화비전 주식회사 之印) -->
+    <!-- 상단: 한화 -->
+    <text x="72" y="62" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="28" font-weight="bold" fill="#C41E1E" transform="rotate(-15, 72, 55)">韓</text>
+    <text x="128" y="62" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="28" font-weight="bold" fill="#C41E1E" transform="rotate(15, 128, 55)">華</text>
+
+    <!-- 중단: 비전 -->
+    <text x="60" y="100" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="26" font-weight="bold" fill="#C41E1E">備</text>
+    <text x="100" y="100" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="26" font-weight="bold" fill="#C41E1E">典</text>
+    <text x="140" y="100" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="26" font-weight="bold" fill="#C41E1E">株</text>
+
+    <!-- 하단: 식회사 -->
+    <text x="72" y="138" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="26" font-weight="bold" fill="#C41E1E" transform="rotate(10, 72, 132)">式</text>
+    <text x="128" y="138" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="26" font-weight="bold" fill="#C41E1E" transform="rotate(-10, 128, 132)">會</text>
+
+    <!-- 최하단: 之印 -->
+    <text x="84" y="170" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="22" font-weight="bold" fill="#C41E1E" transform="rotate(15, 84, 165)">之</text>
+    <text x="116" y="170" text-anchor="middle" font-family="'SimSun', '宋体', serif" font-size="22" font-weight="bold" fill="#C41E1E" transform="rotate(-15, 116, 165)">印</text>
+
+    <!-- 불규칙한 질감 효과 (도장 느낌) -->
+    <circle cx="45" cy="75" r="2" fill="#C41E1E" opacity="0.3"/>
+    <circle cx="155" cy="80" r="1.5" fill="#C41E1E" opacity="0.2"/>
+    <circle cx="90" cy="155" r="1" fill="#C41E1E" opacity="0.25"/>
+    <circle cx="130" cy="50" r="1.5" fill="#C41E1E" opacity="0.2"/>
+    <circle cx="50" cy="130" r="1" fill="#C41E1E" opacity="0.3"/>
   </g>
 </svg>

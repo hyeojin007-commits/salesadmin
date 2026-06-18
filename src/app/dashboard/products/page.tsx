@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as XLSX from "xlsx";
 
 interface Product {
   id: string;
@@ -69,13 +70,15 @@ export default function ProductsPage() {
   };
 
   const downloadTemplate = () => {
-    const header = "제품명\t카테고리\t단가\t단위\t설명\n";
-    const sample = "예시제품\tCCTV\t100000\tEA\t제품 설명\n";
-    const blob = new Blob(["﻿" + header + sample], { type: "text/tab-separated-values;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "제품_일괄등록_양식.xls"; a.click();
-    URL.revokeObjectURL(url);
+    const data = [
+      ["제품명", "카테고리", "단가", "단위", "설명"],
+      ["예시제품", "CCTV", 100000, "EA", "제품 설명"],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 8 }, { wch: 30 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "제품목록");
+    XLSX.writeFile(wb, "제품_일괄등록_양식.xlsx");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

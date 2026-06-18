@@ -204,7 +204,7 @@ export default function QuotesPage() {
                 <p style={{ fontFamily: "'돋움체', 'DotumChe', monospace", fontSize: "14pt", fontWeight: "bold", marginBottom: "2px" }}>한화비전주식회사</p>
                 <span>{`경기도 성남시 분당구 판교로319-6\n대표이사  김 기 철\n\n담  당 : ${selected.issuedBy.name}`}</span>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/stamp.svg" alt="직인" style={{ position: "absolute", top: "10px", right: "10px", width: "90px", height: "90px" }} />
+                <img src="/stamp.png" alt="직인" style={{ position: "absolute", top: "10px", right: "10px", width: "90px", height: "90px" }} />
               </div>
             </div>
 

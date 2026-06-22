@@ -120,7 +120,6 @@ export default function QuotesPage() {
         )}
       </div>
 
-      {/* 작성 폼 */}
       {showForm && !selected && (
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">견적서 작성</h2>
@@ -165,29 +164,24 @@ export default function QuotesPage() {
         </form>
       )}
 
-      {/* 견적서 상세 - 엑셀 원본 동일 */}
       {selected ? (
         <div>
           <button onClick={() => setSelected(null)} className="text-blue-600 hover:underline text-sm mb-4 print:hidden">← 목록으로</button>
 
           <div className="bg-white shadow mx-auto print:shadow-none print:p-0" style={{ width: "210mm", padding: "15mm 20mm", fontFamily: "'굴림', 'Gulim', sans-serif", fontSize: "10pt", lineHeight: 1.4, color: "#000" }}>
 
-            {/* Row 1: 제목 */}
             <div style={{ borderTop: "1px solid #000", borderLeft: "1px solid #000", borderRight: "1px solid #000", padding: "10px 0", textAlign: "center" }}>
               <span style={{ fontFamily: "'돋움', 'Dotum', sans-serif", fontSize: "36pt", fontWeight: "bold", letterSpacing: "0.3em" }}>
                 견 적 서
               </span>
             </div>
 
-            {/* Row 2: 견적번호 + 견적일 */}
             <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", borderLeft: "1px solid #000", borderRight: "1px solid #000", padding: "4px 8px", fontSize: "10pt", color: "#000" }}>
               <span>견적 번호 : {selected.quoteNumber}</span>
               <span>견적일 : {formatQuoteDate(selected.createdAt)}</span>
             </div>
 
-            {/* Row 3~7: 수신처(좌) + 공급자정보(우) */}
             <div style={{ display: "flex", borderLeft: "1px solid #000", borderRight: "1px solid #000", minHeight: "140px" }}>
-              {/* 좌측: 수신처, 건명 */}
               <div style={{ flex: 1, padding: "8px" }}>
                 <div style={{ height: "24px" }}></div>
                 <p style={{ fontSize: "16pt", fontWeight: "bold", marginBottom: "4px" }}>
@@ -199,7 +193,6 @@ export default function QuotesPage() {
                   </p>
                 )}
               </div>
-              {/* 우측: 공급자 정보 박스 */}
               <div style={{ width: "260px", borderLeft: "1px solid #ccc", padding: "8px", fontSize: "9pt", lineHeight: 1.8, whiteSpace: "pre-line", color: "#000", position: "relative" }}>
                 <p style={{ fontFamily: "'돋움체', 'DotumChe', monospace", fontSize: "14pt", fontWeight: "bold", marginBottom: "2px" }}>한화비전주식회사</p>
                 <span>{`경기도 성남시 분당구 판교로319-6\n대표이사  김 기 철\n\n담  당 : ${selected.issuedBy.name}`}</span>
@@ -208,12 +201,10 @@ export default function QuotesPage() {
               </div>
             </div>
 
-            {/* Row 8: 단위 */}
             <div style={{ textAlign: "right", padding: "2px 8px", borderLeft: "1px solid #000", borderRight: "1px solid #000", fontSize: "10pt" }}>
               [단위 : 원]
             </div>
 
-            {/* Row 9~22: 품목 테이블 */}
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10pt" }}>
               <thead>
                 <tr>
@@ -240,7 +231,6 @@ export default function QuotesPage() {
                     <td style={tdStyle({ textAlign: "center" })}></td>
                   </tr>
                 ))}
-                {/* 이하여백 행 */}
                 {selected.order.items.length < EMPTY_ROWS && (
                   <tr>
                     <td style={tdStyle({})}></td>
@@ -252,7 +242,6 @@ export default function QuotesPage() {
                     <td style={tdStyle({})}></td>
                   </tr>
                 )}
-                {/* 빈 행 채우기 */}
                 {Array.from({ length: Math.max(0, EMPTY_ROWS - selected.order.items.length - 1) }).map((_, i) => (
                   <tr key={`empty-${i}`}>
                     <td style={tdStyle({})}>&nbsp;</td>
@@ -266,7 +255,6 @@ export default function QuotesPage() {
                   </tr>
                 ))}
               </tbody>
-              {/* 합계 */}
               <tfoot>
                 <tr>
                   <td colSpan={2} style={{ ...tdStyle({ fontWeight: "bold", textAlign: "center" }), borderTop: "2px solid #000" }}>
@@ -286,7 +274,6 @@ export default function QuotesPage() {
               </tfoot>
             </table>
 
-            {/* 하단 조건 */}
             <div style={{ borderLeft: "1px solid #000", padding: "6px 8px", fontSize: "10pt", lineHeight: 1.6 }}>
               <p>1. 납&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;기 : 발주(계약)후 6주</p>
               <p style={{ borderBottom: "1px solid #000", paddingBottom: "4px" }}>2. 유효기간 : 견적일로부터 7일</p>
@@ -299,12 +286,10 @@ export default function QuotesPage() {
               <p>※ 상기 견적은 VAT 별도 견적입니다.</p>
             </div>
 
-            {/* 메타 (인쇄 시 숨김) */}
             <div className="print:hidden" style={{ marginTop: "12px", fontSize: "9pt", color: "#999" }}>
               작성자: {selected.issuedBy.name} | 생성일시: {new Date(selected.createdAt).toLocaleString("ko-KR")}
             </div>
 
-            {/* 버튼 */}
             <div className="print:hidden" style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
               <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
                 인쇄 / PDF 저장
@@ -318,7 +303,6 @@ export default function QuotesPage() {
           </div>
         </div>
       ) : (
-        /* 목록 */
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
